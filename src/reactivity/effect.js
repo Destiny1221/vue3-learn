@@ -56,8 +56,12 @@ export function effect(fn, options) {
     return runner;
 }
 
+export function isTracking() {
+    return shouldTrack && activeEffect
+}
+
 export function track(object, key) {
-    if (shouldTrack && activeEffect) {
+    if (isTracking()) {
         let depsMap = targetMap.get(object)
         if (!depsMap) {
             targetMap.set(object, depsMap = new Map())
@@ -70,7 +74,7 @@ export function track(object, key) {
     }
 }
 
-function trackEffects(dep) {
+export function trackEffects(dep) {
     if (shouldTrack) {
         dep.add(activeEffect)
         activeEffect.deps.push(dep)
