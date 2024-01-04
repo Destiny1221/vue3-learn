@@ -12,3 +12,5 @@ export {
 export { effect } from './effect.js'
 
 export { ref, shallowRef, toRef, toRefs } from './ref.js'
+
+export { computed } from './computed.js'

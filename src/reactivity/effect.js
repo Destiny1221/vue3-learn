@@ -7,13 +7,14 @@ let shouldTrack = true
 
 const targetMap = new WeakMap()
 
-class ReactiveEffect {
+export class ReactiveEffect {
     active = true
     deps = []
     parent = undefined
 
-    constructor(fn) {
+    constructor(fn, scheduler) {
         this.fn = fn
+        this.scheduler = scheduler
         console.log("创建 ReactiveEffect 对象");
     }
 

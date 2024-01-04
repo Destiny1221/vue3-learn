@@ -1,5 +1,7 @@
 export const isObject = (val) => val !== null && typeof val === 'object'
 
+export const isFunction = (val) => typeof val === 'function'
+
 export const isArray = Array.isArray
 
 export const isIntegerKey = (key) =>
