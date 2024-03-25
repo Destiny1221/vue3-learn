@@ -137,7 +137,9 @@ export function trackRefValue(ref) {
 export function triggerRefValue(ref) {
   ref = toRaw(ref)
   const dep = ref.dep
-  triggerEffects(dep)
+  if(dep){
+    triggerEffects(dep)
+  }
 }
 
 // 如果参数是 ref，则返回内部值，否则返回参数本身，其实就是一个语法糖
