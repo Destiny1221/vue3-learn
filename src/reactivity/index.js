@@ -1,5 +1,6 @@
 export {
     reactive,
+    ReactiveFlags,
     readonly,
     shallowReactive,
     shallowReadonly,
@@ -9,8 +10,8 @@ export {
     toRaw
 } from './reactive.js'
 
-export { effect } from './effect.js'
+export { effect, ReactiveEffect } from './effect.js'
 
-export { ref, shallowRef, toRef, toRefs } from './ref.js'
+export { ref, shallowRef, toRef, toRefs, isRef } from './ref.js'
 
 export { computed } from './computed.js'

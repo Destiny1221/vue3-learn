@@ -13,6 +13,10 @@ export const toRawType = (value) => {
 
 export const isArray = Array.isArray
 
+export const isMap = (val) => toTypeString(val) === '[object Map]'
+export const isSet = (val) => toTypeString(val) === '[object Set]'
+export const isPlainObject = (val) => toTypeString(val) === '[object Object]'
+
 export const isIntegerKey = (key) =>
   isString(key) &&
   key !== 'NaN' &&
@@ -37,4 +41,14 @@ export const def = (obj, key, value) => {
     enumerable: false,
     value
   })
+}
+
+export const NOOP = () => { }
+
+export const isPromise = (val) => {
+  return (
+    (isObject(val) || isFunction(val)) &&
+    isFunction(val.then) &&
+    isFunction(val.catch)
+  )
 }
