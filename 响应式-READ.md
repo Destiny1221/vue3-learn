@@ -65,3 +65,33 @@ ref的通过class实现，通过class的取值函数和存值函数进行依赖�
 
 ### toRef
 如果是Ref类型则返回ref.value，否则直接返回ref
+
+## computed 实现
+具体分析请参考computed.js
+
+为了加深对computed的理解，用一个例子分析compued的缓存及计算过程
+
+``` 
+const value = reactive({ foo: 1 })
+const cValue = computed(() => value.foo)
+console.log(cValue.value) // 1
+console.log(cValue.value) // 1
+
+value.foo = 2
+console.log(cValue.value) // 2
+```
+首先执行computed(() => value.foo)方法时，会创建一个ComputedRefImpl类型的实例，在初始化实例时，会创建一个ReactiveEffect对象，将我们的getter函数保存进去，以及传入一个调度器函数scheduler，scheduler函数体内主要就是修改_dirty属性值。
+
+当打印cValue.value，会命中ComputedRefImpl对应的get方法，在get中执行trackRefValue收集对应的依赖(由于此时没有处于活跃状态的effect，及activeEffect，所以并不会进行依赖收集)。接着默认_dirty为true，将_dirty设置为false，并执行effect.run，计算数据，计算完成后将数据缓存值self._value中，方便下次利用。在调用effect.run过程中，会将ComputedRefImpl构造器中创建的ReactiveEffect实例收集到 targetMap[toRaw(value)].foo 中。当我们再次打印cValue.value时，会重新跑一遍上述get方法，只不过由于_dirty被置为false，所以不会执行effect.run，会直接返回缓存_value中的数据，以此达到缓存目的。
+
+当修改value.foo = 2，触发  targetMap[toRaw(value)].foo 中的依赖，执行依赖更新，由于初始化ReactiveEffect时设置了一个调度器，因此本次依赖更新只会执行这个调度器函数，将_dirty变量重置为true，并手动调用triggerRefValue触发依赖，在调用triggerRefValue的过程中，因为 cValue.dep=undefined，所以没有依赖要触发。
+
+当第三次打印cValue.value时，由于_dirty为true，所以会执行cValue.effect.run，并将结果赋值给cValue._value，最后返回cValue._value，打印2
+
+## computed 总结
+computed本质也是个ref（ComputedRefImpl），它是懒惰的，如果不使用计算属性，那么是不会进行计算的，只有使用它，才会调用计算属性中的effect.run方法进行计算，同时将结果缓存
+到_value中。
+
+在第一次获取计算属性的值的过程中会进行依赖收集，假设计算属性的计算与响应式对象的a、b两个属性有关，会将computed中生成的ReactiveEffect实例收集到targetMap[obj].a、targetMap[obj].b中，一旦a或b属性变化了，会触发依赖，而依赖触发的过程中会执行调度函数，在调度函数中会将脏数据表示_dirty设置为true，并触发计算属性的依赖更新。那么在·下一次使用计算属性
+的话，由于_dirty为true，便会重新调用effect.run方法重新计算值。
+
