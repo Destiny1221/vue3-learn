@@ -112,13 +112,14 @@ function doWatch(
                 }
                 /**
                  * 如果存在cleanup清理函数，执行清理函数
-                 * cleanup是在 watchEffect 中注册的清理函数，具体形式见官网
+                 * cleanup是在 watchEffect 中注册的清理函数。该函数会在该副作用函数下一次执行前被调用，用来清理无效的副作用。
                  */
                 if (cleanup) {
                     cleanup()
                 }
                 // 执行source函数，使用callWithAsyncErrorHandling函数包装，与callWithErrorHandling相同的是处理
-                // source执行过程中的错误，不同的是会异步处理错误，传入onCleanup，用来注册清理函数
+                // source执行过程中的错误，不同的是会异步处理错误
+                // 传入onCleanup，用来注册清理函数，最终执行的是fn(...args)，所以我们在watchEffect函数中能够获取onCleanup函数作为第一个参数，清理异步副作用函数。
                 return callWithAsyncErrorHandling(
                     source,
                     instance,
@@ -144,6 +145,7 @@ function doWatch(
 
     let cleanup
     let onCleanup = (fn) => {
+        // 当用户在watchEffect中使用clean函数时进入这段代码，执行用户传递的清理未执行完毕的异步副作用函数。
         cleanup = effect.onStop = () => {
             callWithErrorHandling(fn, instance)
             cleanup = effect.onStop = undefined
@@ -183,7 +185,7 @@ function doWatch(
                     ? (newValue).some((v, i) => hasChanged(v, oldValue[i]))
                     : hasChanged(newValue, oldValue))
             ) {
-                // cleanup before running cb again
+                // 如果存在清除副作用函数，调用该函数
                 if (cleanup) {
                     cleanup()
                 }
@@ -230,7 +232,7 @@ function doWatch(
     // 创建effect实例
     const effect = new ReactiveEffect(getter, scheduler)
 
-    // 首次执行副作用函数
+    // 首次执行副作用函数，执行watch API
     if (cb) {
         // 如果是immediate为true，执行job，触发cb
         if (immediate) {
